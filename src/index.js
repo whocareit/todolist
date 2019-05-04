@@ -1,82 +1,95 @@
-import {createStore} from 'redux';
-import React  from 'react';
+import { createStore } from 'redux';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
 
-const curState = {items:[],text:''};
-const  reducer = (state = curState,action) => {
-    switch(action.type){
-      case 'handleSubmit':
-        return state = (function() {
-          if(!state.text.length){
-            return;
-          }
-          const newItems = {
-            text: state.text,
-            id:Date.now()
-          }
-          state = {
-            items: state.items.concat(newItems),
-            text:''
-          }
-          console.log(state)
-          return state;
-        }());
-      case 'handleDelete':
-        return state = (function(){
-          state.items = state.items.filter((items) =>{
-          return items.id !== action.id;
-          })
-          return state;
+const curState = { items: [], text: '' };
+const reducer = (state = curState, action) => {
+  switch (action.type) {
+    case 'handleSubmit':
+      return state = (function () {
+        if (!state.text.length) {
+          return state
+        }
+        const newItems = {
+          text: state.text,
+          id: Date.now()
+        }
+        state = {
+          items: state.items.concat(newItems),
+          text: state.text
+        }
+        return state;
       }());
-      default: return state;
-    }
+    case 'handleDelete':
+      return state = (function () {
+        state.items = state.items.filter((items) => {
+          return items.id !== action.id;
+        })
+        return state;
+      }());
+      case 'inputChange':
+        state.text = action.text
+        return state
+    default: return state;
+  }
 }
 const store = createStore(reducer);
 
-function Counter(props){
+function Counter(props) {
   return (<ul>
-          {props.items.map(items =>(
-          <li key = {items.id}
-           onClick = {props.handleDelete} 
-          >{items.text}</li>
-         ))}
-         </ul>);
-      
+    {props.items.map(items => (
+      <li key={items.id}
+        onClick={props.handleDelete}
+      >{items.text}</li>
+    ))}
+  </ul>);
+
 }
-class TodoList extends React.Component{
-  constructor(props){
+class TodoList extends React.Component {
+  constructor(props) {
     super(props);
   }
-  render(){
-    return(
-    <div>
-    <form onSubmit = {this.props.handleSubmit}>
-      <input
-      id = 'new-Todo'
-      onChange = {(e) => {
-        store.getState().text = e.target.value;
-      }}
-      />
-      <button type="submit">
-       ADD
+
+  handleSubmit = (e) => {
+    e.preventDefault()
+    this.props.handleSubmit()
+  }
+  render() {
+    return (
+      <div>
+        <form onSubmit={(e) => this.handleSubmit(e)}>
+          <input
+            id='new-Todo'
+            onChange={(e) => {
+              store.dispatch({
+                type: 'inputChange',
+                text: e.target.value
+              })
+            }}
+          />
+          <button type="submit">
+            ADD
       </button>
-      <Counter items = {store.getState().items} 
-      handleDelete = {() => store.dispatch({type:'handleDelete',id:store.getState().items[0].id})}
-      /> 
-    </form>     
-    </div>
+          <Counter items={store.getState().items}
+            handleDelete={() => store.dispatch({ type: 'handleDelete', id: store.getState().items[0].id })}
+          />
+        </form>
+      </div>
     );
   }
 }
 
-const render = () =>{
-    ReactDOM.render(
-      <TodoList
-        handleSubmit = {(e) => {store.dispatch({type: 'handleSubmit'});e.preventDefault()}}
-      />,
-      document.getElementById('root')
-    );
+const render = () => {
+  const handleSubmit = () => {
+    store.dispatch({ type: 'handleSubmit' });
+  }
+  ReactDOM.render(
+    <TodoList
+      handleSubmit={handleSubmit}
+    />,
+    document.getElementById('root')
+  );
 }
 render();
 store.subscribe(render);
